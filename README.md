@@ -2,6 +2,8 @@
 
 Private Homey-App für die Abfrage einer ELCO-Gastherme über RemoconNet. Die Zuordnung basiert auf öffentlich dokumentierten Gasthermen-Antworten. Welche Werte die THISION MINI mit deinem Gateway liefert, zeigt der erste Test vor Ort.
 
+> **Hinweis:** Diese App wurde unabhängig entwickelt und ist keine offizielle ELCO-App. Die Nutzung erfolgt auf eigene Gefahr.
+
 ## Kompatibilität
 
 Die App wurde mit einer **ELCO THISION MINI** auf Homey Pro getestet. Sie lässt sich mit einem eigenen RemoconNet-Konto und einer eigenen Anlage koppeln.
