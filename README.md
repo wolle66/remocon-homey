@@ -2,6 +2,12 @@
 
 Private Homey-App für die Abfrage einer ELCO-Gastherme über RemoconNet. Die Zuordnung basiert auf öffentlich dokumentierten Gasthermen-Antworten. Welche Werte die THISION MINI mit deinem Gateway liefert, zeigt der erste Test vor Ort.
 
+## Kompatibilität
+
+Die App wurde mit einer **ELCO THISION MINI** auf Homey Pro getestet. Sie lässt sich mit einem eigenen RemoconNet-Konto und einer eigenen Anlage koppeln.
+
+Andere ELCO-Gasthermen mit derselben RemoconNet-Schnittstelle können ebenfalls funktionieren. Je nach Modell können Messwerte fehlen, anders skaliert sein oder andere Betriebsarten zur Verfügung stehen. Für Wärmepumpen und andere Geräteserien liegen bisher keine Tests vor.
+
 ## Installation
 
 1. Aktualisiere Homey Pro auf Firmware 12.9.0 oder neuer. Installiere Node.js 22 und die [Homey CLI](https://apps.developer.homey.app/the-basics/getting-started). Halte bei einem Homey Pro Early 2023 auch Docker bereit.
