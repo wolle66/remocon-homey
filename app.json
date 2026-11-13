@@ -1,0 +1,552 @@
+{
+  "id": "de.remocon.boiler",
+  "version": "0.2.3",
+  "compatibility": ">=12.9.0",
+  "sdk": 3,
+  "platforms": [
+    "local"
+  ],
+  "name": {
+    "de": "ELCO RemoconNet",
+    "en": "ELCO RemoconNet"
+  },
+  "description": {
+    "de": "Betriebsdaten einer ELCO-Heizung aus RemoconNet auslesen.",
+    "en": "Read ELCO boiler telemetry from RemoconNet."
+  },
+  "category": [
+    "climate"
+  ],
+  "permissions": [],
+  "author": {
+    "name": "Private Homey App"
+  },
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png"
+  },
+  "drivers": [
+    {
+      "id": "boiler",
+      "name": {
+        "de": "ELCO-Heizung",
+        "en": "ELCO boiler"
+      },
+      "class": "sensor",
+      "platforms": [
+        "local"
+      ],
+      "connectivity": [
+        "cloud"
+      ],
+      "capabilities": [
+        "measure_temperature",
+        "burner_active",
+        "burner_hours_heating",
+        "burner_hours_water",
+        "gas_heating_last_month",
+        "gas_water_last_month",
+        "measure_temperature.outside",
+        "burner_power_kw",
+        "gas_heating_today_volume",
+        "gas_water_today_volume",
+        "gas_heating_current_month_volume",
+        "gas_water_current_month_volume",
+        "gas_heating_previous_month_volume",
+        "gas_water_previous_month_volume",
+        "boiler_mode",
+        "boiler_mode_state"
+      ],
+      "capabilitiesOptions": {
+        "measure_temperature": {
+          "title": {
+            "de": "Vorlauftemperatur",
+            "en": "Flow temperature"
+          }
+        },
+        "measure_temperature.outside": {
+          "title": {
+            "de": "Außentemperatur Heizung",
+            "en": "Boiler outdoor temperature"
+          }
+        },
+        "burner_active": {
+          "preventInsights": true
+        }
+      },
+      "images": {
+        "small": "/drivers/boiler/assets/images/small.png",
+        "large": "/drivers/boiler/assets/images/large.png"
+      },
+      "pair": [
+        {
+          "id": "login_credentials",
+          "template": "login_credentials",
+          "options": {
+            "title": {
+              "de": "Bei RemoconNet anmelden",
+              "en": "Sign in to RemoconNet"
+            },
+            "usernameLabel": {
+              "de": "E-Mail-Adresse",
+              "en": "Email address"
+            }
+          },
+          "navigation": {
+            "next": "select_gateway"
+          }
+        },
+        {
+          "id": "select_gateway"
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "repair": [
+        {
+          "id": "login_credentials",
+          "template": "login_credentials",
+          "options": {
+            "title": {
+              "de": "Bei RemoconNet anmelden",
+              "en": "Sign in to RemoconNet"
+            },
+            "usernameLabel": {
+              "de": "E-Mail-Adresse",
+              "en": "Email address"
+            }
+          }
+        }
+      ],
+      "settings": [
+        {
+          "id": "remocon_diagnostic",
+          "type": "label",
+          "label": {
+            "de": "RemoconNet-Diagnose",
+            "en": "RemoconNet diagnostics"
+          },
+          "value": ""
+        }
+      ]
+    }
+  ],
+  "capabilities": {
+    "burner_active": {
+      "type": "boolean",
+      "title": {
+        "de": "Brenner aktiv",
+        "en": "Burner active"
+      },
+      "getable": true,
+      "setable": false,
+      "insights": false,
+      "uiComponent": "sensor"
+    },
+    "burner_hours_heating": {
+      "type": "number",
+      "title": {
+        "de": "Brennerstunden Heizung",
+        "en": "Burner hours for heating"
+      },
+      "getable": true,
+      "setable": false,
+      "insights": true,
+      "uiComponent": "sensor",
+      "units": {
+        "en": "h",
+        "de": "h"
+      },
+      "decimals": 0
+    },
+    "burner_hours_water": {
+      "type": "number",
+      "title": {
+        "de": "Brennerstunden Warmwasser",
+        "en": "Burner hours for hot water"
+      },
+      "getable": true,
+      "setable": false,
+      "insights": true,
+      "uiComponent": "sensor",
+      "units": {
+        "en": "h",
+        "de": "h"
+      },
+      "decimals": 0
+    },
+    "gas_heating_last_month": {
+      "type": "number",
+      "title": {
+        "de": "Gas Heizung (letzter Monat)",
+        "en": "Heating gas (last month)"
+      },
+      "getable": true,
+      "setable": false,
+      "insights": true,
+      "uiComponent": "sensor",
+      "units": {
+        "en": "kWh",
+        "de": "kWh"
+      },
+      "decimals": 1
+    },
+    "gas_water_last_month": {
+      "type": "number",
+      "title": {
+        "de": "Gas Warmwasser (letzter Monat)",
+        "en": "Hot water gas (last month)"
+      },
+      "getable": true,
+      "setable": false,
+      "insights": true,
+      "uiComponent": "sensor",
+      "units": {
+        "en": "kWh",
+        "de": "kWh"
+      },
+      "decimals": 1
+    },
+    "burner_power_kw": {
+      "type": "number",
+      "title": {
+        "de": "Brennerleistung",
+        "en": "Burner power"
+      },
+      "getable": true,
+      "setable": false,
+      "insights": true,
+      "uiComponent": "sensor",
+      "units": {
+        "de": "kW",
+        "en": "kW"
+      },
+      "decimals": 2
+    },
+    "gas_heating_today_volume": {
+      "type": "number",
+      "title": {
+        "de": "Gas Heizung heute",
+        "en": "Gas heating today"
+      },
+      "getable": true,
+      "setable": false,
+      "insights": true,
+      "uiComponent": "sensor",
+      "units": {
+        "de": "m³",
+        "en": "m³"
+      },
+      "decimals": 2
+    },
+    "gas_water_today_volume": {
+      "type": "number",
+      "title": {
+        "de": "Gas Warmwasser heute",
+        "en": "Gas hot water today"
+      },
+      "getable": true,
+      "setable": false,
+      "insights": true,
+      "uiComponent": "sensor",
+      "units": {
+        "de": "m³",
+        "en": "m³"
+      },
+      "decimals": 2
+    },
+    "gas_heating_current_month_volume": {
+      "type": "number",
+      "title": {
+        "de": "Gas Heizung diesen Monat",
+        "en": "Gas heating this month"
+      },
+      "getable": true,
+      "setable": false,
+      "insights": true,
+      "uiComponent": "sensor",
+      "units": {
+        "de": "m³",
+        "en": "m³"
+      },
+      "decimals": 2
+    },
+    "gas_water_current_month_volume": {
+      "type": "number",
+      "title": {
+        "de": "Gas Warmwasser diesen Monat",
+        "en": "Gas hot water this month"
+      },
+      "getable": true,
+      "setable": false,
+      "insights": true,
+      "uiComponent": "sensor",
+      "units": {
+        "de": "m³",
+        "en": "m³"
+      },
+      "decimals": 2
+    },
+    "gas_heating_previous_month_volume": {
+      "type": "number",
+      "title": {
+        "de": "Gas Heizung letzter Monat",
+        "en": "Gas heating last month"
+      },
+      "getable": true,
+      "setable": false,
+      "insights": true,
+      "uiComponent": "sensor",
+      "units": {
+        "de": "m³",
+        "en": "m³"
+      },
+      "decimals": 2
+    },
+    "gas_water_previous_month_volume": {
+      "type": "number",
+      "title": {
+        "de": "Gas Warmwasser letzter Monat",
+        "en": "Gas hot water last month"
+      },
+      "getable": true,
+      "setable": false,
+      "insights": true,
+      "uiComponent": "sensor",
+      "units": {
+        "de": "m³",
+        "en": "m³"
+      },
+      "decimals": 2
+    },
+    "boiler_mode": {
+      "type": "enum",
+      "title": {
+        "de": "Betriebsart wählen",
+        "en": "Select operating mode"
+      },
+      "getable": true,
+      "setable": true,
+      "insights": false,
+      "uiComponent": "picker",
+      "values": [
+        {
+          "id": "summer",
+          "title": {
+            "de": "Sommer",
+            "en": "Summer"
+          }
+        },
+        {
+          "id": "winter",
+          "title": {
+            "de": "Winter",
+            "en": "Winter"
+          }
+        },
+        {
+          "id": "heating",
+          "title": {
+            "de": "Nur Heizen",
+            "en": "Heating only"
+          }
+        },
+        {
+          "id": "off",
+          "title": {
+            "de": "Aus",
+            "en": "Off"
+          }
+        }
+      ]
+    },
+    "boiler_mode_state": {
+      "type": "enum",
+      "title": {
+        "de": "Aktuelle Betriebsart",
+        "en": "Current operating mode"
+      },
+      "getable": true,
+      "setable": false,
+      "insights": false,
+      "uiComponent": "sensor",
+      "values": [
+        {
+          "id": "summer",
+          "title": {
+            "de": "Sommer",
+            "en": "Summer"
+          }
+        },
+        {
+          "id": "winter",
+          "title": {
+            "de": "Winter",
+            "en": "Winter"
+          }
+        },
+        {
+          "id": "heating",
+          "title": {
+            "de": "Nur Heizen",
+            "en": "Heating only"
+          }
+        },
+        {
+          "id": "off",
+          "title": {
+            "de": "Aus",
+            "en": "Off"
+          }
+        },
+        {
+          "id": "pending",
+          "title": {
+            "de": "Wechsel läuft",
+            "en": "Change pending"
+          }
+        },
+        {
+          "id": "unconfirmed",
+          "title": {
+            "de": "Wechsel unbestätigt",
+            "en": "Change unconfirmed"
+          }
+        },
+        {
+          "id": "other",
+          "title": {
+            "de": "Andere Betriebsart",
+            "en": "Other operating mode"
+          }
+        }
+      ]
+    }
+  },
+  "flow": {
+    "triggers": [
+      {
+        "id": "burner_active_true",
+        "title": {
+          "de": "Brenner ist angegangen",
+          "en": "Burner turned on"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=boiler"
+          }
+        ]
+      },
+      {
+        "id": "burner_active_false",
+        "title": {
+          "de": "Brenner ist ausgegangen",
+          "en": "Burner turned off"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=boiler"
+          }
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "id": "set_boiler_mode",
+        "title": {
+          "de": "Betriebsart einstellen",
+          "en": "Set operating mode"
+        },
+        "titleFormatted": {
+          "de": "Betriebsart auf [[mode]] stellen",
+          "en": "Set operating mode to [[mode]]"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=boiler"
+          },
+          {
+            "name": "mode",
+            "type": "dropdown",
+            "values": [
+              {
+                "id": "summer",
+                "title": {
+                  "de": "Sommer",
+                  "en": "Summer"
+                }
+              },
+              {
+                "id": "winter",
+                "title": {
+                  "de": "Winter",
+                  "en": "Winter"
+                }
+              },
+              {
+                "id": "heating",
+                "title": {
+                  "de": "Nur Heizen",
+                  "en": "Heating only"
+                }
+              },
+              {
+                "id": "off",
+                "title": {
+                  "de": "Aus",
+                  "en": "Off"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "brandColor": "#203542",
+  "widgets": {
+    "boiler-control": {
+      "name": {
+        "de": "Heizungssteuerung",
+        "en": "Heating controls"
+      },
+      "height": 178,
+      "settings": [
+        {
+          "id": "boiler",
+          "type": "autocomplete",
+          "title": {
+            "de": "Heizung",
+            "en": "Boiler"
+          }
+        }
+      ],
+      "api": {
+        "getStatus": {
+          "method": "GET",
+          "path": "/status"
+        },
+        "setMode": {
+          "method": "POST",
+          "path": "/mode"
+        }
+      },
+      "id": "boiler-control"
+    }
+  }
+}

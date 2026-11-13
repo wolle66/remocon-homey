@@ -1,0 +1,27 @@
+{
+  "name": {
+    "de": "Heizungssteuerung",
+    "en": "Heating controls"
+  },
+  "height": 178,
+  "settings": [
+    {
+      "id": "boiler",
+      "type": "autocomplete",
+      "title": {
+        "de": "Heizung",
+        "en": "Boiler"
+      }
+    }
+  ],
+  "api": {
+    "getStatus": {
+      "method": "GET",
+      "path": "/status"
+    },
+    "setMode": {
+      "method": "POST",
+      "path": "/mode"
+    }
+  }
+}

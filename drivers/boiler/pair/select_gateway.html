@@ -1,0 +1,40 @@
+<header class="homey-header">
+  <h1 class="homey-title">ELCO-Anlage finden</h1>
+</header>
+<p id="gateway-status" role="status">RemoconNet wird nach Anlagen durchsucht …</p>
+<form id="gateway-form" hidden>
+  <p>Öffne deine Anlage im RemoconNet-Webportal. Die Gateway-ID steht am Ende der Adresse hinter <code>/R2/Plant/Index/</code>.</p>
+  <label class="homey-form-label" for="gateway-id">Gateway-ID</label>
+  <input class="homey-form-input" id="gateway-id" required autocapitalize="off" spellcheck="false">
+  <button class="homey-button-primary-full" type="submit">Anlage prüfen</button>
+</form>
+<script>
+(() => {
+  const form = document.getElementById('gateway-form');
+  const status = document.getElementById('gateway-status');
+  const button = form.querySelector('button');
+
+  Homey.emit('discover_gateways').then(found => {
+    if (found) return Homey.showView('list_devices');
+    status.textContent = 'Die automatische Suche hat keine Anlage gefunden.';
+    form.hidden = false;
+  }).catch(error => {
+    status.textContent = error.message;
+    form.hidden = false;
+  });
+
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    button.disabled = true;
+    status.textContent = 'Anlage wird geprüft …';
+    try {
+      await Homey.emit('use_gateway', document.getElementById('gateway-id').value);
+      await Homey.showView('list_devices');
+    } catch (error) {
+      status.textContent = error.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
+})();
+</script>

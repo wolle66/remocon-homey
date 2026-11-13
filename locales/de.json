@@ -1,0 +1,15 @@
+{
+  "widget": {
+    "summer": "Sommer",
+    "winter": "Winter",
+    "heating": "Nur Heizen",
+    "off": "Aus",
+    "other": "Andere Betriebsart",
+    "active": "Aktiv",
+    "changing": "Wechsel läuft",
+    "unconfirmed": "Wechsel unbestätigt",
+    "unknown": "Betriebsart wird gelesen …",
+    "unavailable": "Heizung nicht erreichbar oder nicht gewählt",
+    "failed": "Schaltauftrag konnte nicht angenommen werden"
+  }
+}

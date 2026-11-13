@@ -1,0 +1,15 @@
+{
+  "widget": {
+    "summer": "Summer",
+    "winter": "Winter",
+    "heating": "Heating only",
+    "off": "Off",
+    "other": "Other mode",
+    "active": "Active",
+    "changing": "Changing mode",
+    "unconfirmed": "Change unconfirmed",
+    "unknown": "Reading operating mode …",
+    "unavailable": "Boiler unavailable or not selected",
+    "failed": "Could not submit mode change"
+  }
+}

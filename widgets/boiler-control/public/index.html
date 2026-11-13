@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root { color-scheme: light dark; }
+body { margin: 0; font: 14px system-ui, sans-serif; color: var(--homey-text-color, CanvasText); }
+main { padding: 10px 12px; }
+header { min-height: 24px; display: flex; align-items: center; gap: 7px; font-weight: 650; margin-bottom: 8px; }
+header::before { content: ""; flex: 0 0 7px; height: 7px; border-radius: 50%; background: currentColor; }
+header[data-state="active"]::before { background: #24875d; }
+header[data-state="pending"]::before { background: #b16913; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+button { box-sizing: border-box; min-height: 54px; padding: 5px; border: 1px solid color-mix(in srgb, currentColor 15%, transparent); border-radius: 12px;
+  background: color-mix(in srgb, currentColor 5%, transparent); color: inherit; font: inherit; font-weight: 650; cursor: pointer; display: grid; justify-items: center; align-content: center; gap: 2px; }
+button[aria-pressed="true"] { background: #165b43; border-color: #165b43; color: #fff; }
+button[data-pending="true"] { outline: 2px solid #b16913; outline-offset: -2px; }
+button:disabled { cursor: default; }
+button:disabled:not([aria-pressed="true"]):not([data-pending="true"]) { opacity: .66; }
+button:focus-visible { outline: 2px solid currentColor; outline-offset: 1px; }
+.icon { font: 20px/1 system-ui, sans-serif; }
+</style>
+</head>
+<body>
+<main>
+  <header id="status" role="status"></header>
+  <div class="grid">
+    <button type="button" data-mode="summer" aria-pressed="false" disabled><span class="icon" aria-hidden="true">☀</span><span></span></button>
+    <button type="button" data-mode="winter" aria-pressed="false" disabled><span class="icon" aria-hidden="true">❄</span><span></span></button>
+    <button type="button" data-mode="heating" aria-pressed="false" disabled><span class="icon" aria-hidden="true">♨</span><span></span></button>
+    <button type="button" data-mode="off" aria-pressed="false" disabled><span class="icon" aria-hidden="true">⏻</span><span></span></button>
+  </div>
+</main>
+<script src="widget.js"></script>
+</body>
+</html>

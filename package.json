@@ -1,0 +1,6 @@
+{
+  "name": "de.remocon.boiler",
+  "version": "0.2.3",
+  "private": true,
+  "main": "app.js"
+}
