@@ -74,6 +74,10 @@ module.exports = class BoilerDevice extends Homey.Device {
   async showMode(mode) {
     await this.setCapabilityValue('boiler_mode_state', mode ?? 'other');
     this.confirmedMode = mode ?? 'other';
+    const selected = MODE_VALUES.some(item => item.id === mode) ? mode : null;
+    if (this.getCapabilityValue('boiler_mode') !== selected) {
+      await this.setCapabilityValue('boiler_mode', selected);
+    }
   }
 
   async poll() {
@@ -86,7 +90,8 @@ module.exports = class BoilerDevice extends Homey.Device {
         try {
           const mode = await client.getMode(this.getData().id);
           if (this.client === client && !this.modeChange && this.modeRevision === revision &&
-              this.getCapabilityValue('boiler_mode_state') !== (mode ?? 'other')) {
+              (this.getCapabilityValue('boiler_mode_state') !== (mode ?? 'other') ||
+                this.getCapabilityValue('boiler_mode') !== mode)) {
             await this.showMode(mode);
           }
         } catch (error) {

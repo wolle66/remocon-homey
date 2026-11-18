@@ -63,3 +63,9 @@ In der Homey-Mobilapp unter **Mehr → Dashboards** ein Dashboard öffnen oder e
 Beim Bearbeiten **Widget hinzufügen → Apps → ELCO RemoconNet → Heizungssteuerung** wählen.
 Bei mehreren Heizungen wähle das gewünschte Gerät in den Widget-Einstellungen aus.
 Die grüne Taste zeigt die bestätigte Betriebsart. Während eines Wechsels wird das Ziel umrandet.
+
+## Version 0.2.5
+
+Die Auswahl der Betriebsart wird mit dem von RemoconNet bestätigten Zustand synchronisiert, beim Start, nach dem Umschalten und bei den regulären Abfragen.
+
+Bei Hinweisen auf eine abgelaufene Sitzung meldet sich die App automatisch erneut an. Dies gilt für die mobile API und das Webportal, einschließlich HTTP 405. Die Datenabfrage wird anschließend einmal wiederholt. Parallele Abrufe teilen sich die Neuanmeldung der mobilen API. Die Wiederherstellung nach mehrtägigem Betrieb muss noch im Praxiseinsatz bestätigt werden.
