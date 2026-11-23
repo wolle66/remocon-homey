@@ -10,6 +10,9 @@
     "unconfirmed": "Change unconfirmed",
     "unknown": "Reading operating mode …",
     "unavailable": "Boiler unavailable or not selected",
-    "failed": "Could not submit mode change"
+    "failed": "Could not submit mode change",
+    "manual": "Manual",
+    "scheduled": "Schedule",
+    "locked": "Boiler locked"
   }
 }

@@ -20,6 +20,9 @@ button:disabled { cursor: default; }
 button:disabled:not([aria-pressed="true"]):not([data-pending="true"]) { opacity: .66; }
 button:focus-visible { outline: 2px solid currentColor; outline-offset: 1px; }
 .icon { font: 20px/1 system-ui, sans-serif; }
+.programs { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:9px; }
+.programs button { min-height:42px; }
+#fault { color:#bf4747; margin:7px 0 0; font-size:12px; min-height:17px; }
 </style>
 </head>
 <body>
@@ -31,6 +34,11 @@ button:focus-visible { outline: 2px solid currentColor; outline-offset: 1px; }
     <button type="button" data-mode="heating" aria-pressed="false" disabled><span class="icon" aria-hidden="true">♨</span><span></span></button>
     <button type="button" data-mode="off" aria-pressed="false" disabled><span class="icon" aria-hidden="true">⏻</span><span></span></button>
   </div>
+  <div class="programs" aria-label="Heizkreis-Steuerung">
+    <button type="button" data-program="manual" aria-pressed="false" disabled></button>
+    <button type="button" data-program="scheduled" aria-pressed="false" disabled></button>
+  </div>
+  <p id="fault" role="status"></p>
 </main>
 <script src="widget.js"></script>
 </body>

@@ -14,12 +14,23 @@ function status(device) {
     active: device.confirmedMode ?? (['pending', 'unconfirmed'].includes(state) ? null : state),
     pending: device.requestedMode ?? null,
     state,
+    program: device.confirmedProgram ?? device.getCapabilityValue('heating_program_state'),
+    pendingProgram: device.requestedProgram ?? null,
+    blocked: device.getCapabilityValue('alarm_boiler_locked'),
+    code: device.getCapabilityValue('boiler_fault_code'),
+    description: device.getCapabilityValue('boiler_fault_description'),
   };
 }
 
 module.exports = {
   async getStatus({ homey, query }) {
     return status(getDevice(homey, query.id));
+  },
+
+  async setProgram({ homey, body }) {
+    const device = getDevice(homey, body.id);
+    await device.changeProgram(body.program);
+    return status(device);
   },
 
   async setMode({ homey, body }) {

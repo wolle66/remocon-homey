@@ -3,7 +3,7 @@
     "de": "Heizungssteuerung",
     "en": "Heating controls"
   },
-  "height": 178,
+  "height": 274,
   "settings": [
     {
       "id": "boiler",
@@ -22,6 +22,10 @@
     "setMode": {
       "method": "POST",
       "path": "/mode"
+    },
+    "setProgram": {
+      "method": "POST",
+      "path": "/program"
     }
   }
 }

@@ -7,6 +7,9 @@ module.exports = class RemoconApp extends Homey.App {
     this.homey.flow.getActionCard('set_boiler_mode')
       .registerRunListener(({ device, mode }) => device.changeMode(mode));
 
+    this.homey.flow.getActionCard('set_heating_program')
+      .registerRunListener(({ device, program }) => device.changeProgram(program));
+
     this.homey.dashboards.getWidget('boiler-control')
       .registerSettingAutocompleteListener('boiler', async query => {
         const devices = this.homey.drivers.getDriver('boiler').getDevices();

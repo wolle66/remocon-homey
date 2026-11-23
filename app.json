@@ -1,6 +1,6 @@
 {
   "id": "de.remocon.boiler",
-  "version": "0.2.5",
+  "version": "0.3.6",
   "compatibility": ">=12.9.0",
   "sdk": 3,
   "platforms": [
@@ -40,7 +40,9 @@
         "cloud"
       ],
       "capabilities": [
+        "measure_temperature.setpoint",
         "measure_temperature",
+        "measure_temperature.return",
         "burner_active",
         "burner_hours_heating",
         "burner_hours_water",
@@ -55,13 +57,18 @@
         "gas_heating_previous_month_volume",
         "gas_water_previous_month_volume",
         "boiler_mode",
-        "boiler_mode_state"
+        "boiler_mode_state",
+        "heating_program",
+        "heating_program_state",
+        "alarm_boiler_locked",
+        "boiler_fault_code",
+        "boiler_fault_description"
       ],
       "capabilitiesOptions": {
         "measure_temperature": {
           "title": {
-            "de": "Vorlauftemperatur",
-            "en": "Flow temperature"
+            "de": "Vorlauf-Isttemperatur",
+            "en": "Flow actual temperature"
           }
         },
         "measure_temperature.outside": {
@@ -72,6 +79,18 @@
         },
         "burner_active": {
           "preventInsights": true
+        },
+        "measure_temperature.setpoint": {
+          "title": {
+            "de": "Vorlauf-Solltemperatur",
+            "en": "Flow setpoint temperature"
+          }
+        },
+        "measure_temperature.return": {
+          "title": {
+            "de": "Rücklauftemperatur",
+            "en": "Return temperature"
+          }
         }
       },
       "images": {
@@ -136,6 +155,18 @@
             "en": "RemoconNet diagnostics"
           },
           "value": ""
+        },
+        {
+          "id": "heating_zone",
+          "type": "number",
+          "label": {
+            "de": "Heizkreis für Hand/Zeit",
+            "en": "Zone for manual/schedule"
+          },
+          "value": 1,
+          "min": 1,
+          "max": 6,
+          "step": 1
         }
       ]
     }
@@ -430,6 +461,114 @@
           }
         }
       ]
+    },
+    "heating_program": {
+      "type": "enum",
+      "title": {
+        "de": "Steuerung Heizkreis",
+        "en": "Heating zone control"
+      },
+      "getable": true,
+      "setable": true,
+      "insights": false,
+      "uiComponent": "picker",
+      "values": [
+        {
+          "id": "manual",
+          "title": {
+            "de": "Handbetrieb",
+            "en": "Manual"
+          }
+        },
+        {
+          "id": "scheduled",
+          "title": {
+            "de": "Zeitprogramm",
+            "en": "Schedule"
+          }
+        }
+      ]
+    },
+    "heating_program_state": {
+      "type": "enum",
+      "title": {
+        "de": "Aktuelle Steuerung",
+        "en": "Current control"
+      },
+      "getable": true,
+      "setable": false,
+      "insights": false,
+      "uiComponent": "sensor",
+      "values": [
+        {
+          "id": "manual",
+          "title": {
+            "de": "Handbetrieb",
+            "en": "Manual"
+          }
+        },
+        {
+          "id": "scheduled",
+          "title": {
+            "de": "Zeitprogramm",
+            "en": "Schedule"
+          }
+        },
+        {
+          "id": "pending",
+          "title": {
+            "de": "Wechsel läuft",
+            "en": "Changing"
+          }
+        },
+        {
+          "id": "unconfirmed",
+          "title": {
+            "de": "Wechsel unbestätigt",
+            "en": "Unconfirmed"
+          }
+        },
+        {
+          "id": "other",
+          "title": {
+            "de": "Andere Steuerung",
+            "en": "Other control"
+          }
+        }
+      ]
+    },
+    "alarm_boiler_locked": {
+      "type": "boolean",
+      "title": {
+        "de": "Heizung gesperrt",
+        "en": "Boiler locked"
+      },
+      "getable": true,
+      "setable": false,
+      "insights": false,
+      "uiComponent": "sensor"
+    },
+    "boiler_fault_code": {
+      "type": "string",
+      "title": {
+        "de": "Fehlercode",
+        "en": "Fault code"
+      },
+      "getable": true,
+      "setable": false,
+      "insights": false,
+      "uiComponent": "sensor"
+    },
+    "boiler_fault_description": {
+      "type": "string",
+      "title": {
+        "de": "Fehlerbeschreibung",
+        "en": "Fault description"
+      },
+      "getable": true,
+      "setable": false,
+      "insights": false,
+      "uiComponent": "sensor"
     }
   },
   "flow": {
@@ -459,6 +598,38 @@
             "name": "device",
             "type": "device",
             "filter": "driver_id=boiler"
+          }
+        ]
+      },
+      {
+        "id": "boiler_locked",
+        "title": {
+          "de": "Heizung meldet eine neue Sperre",
+          "en": "Boiler reports a new lockout"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=boiler"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "code",
+            "type": "string",
+            "title": {
+              "de": "Fehlercode",
+              "en": "Fault code"
+            }
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "title": {
+              "de": "Fehlerbeschreibung",
+              "en": "Fault description"
+            }
           }
         ]
       }
@@ -515,6 +686,44 @@
             ]
           }
         ]
+      },
+      {
+        "id": "set_heating_program",
+        "title": {
+          "de": "Heizkreis-Steuerung einstellen",
+          "en": "Set heating zone control"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=boiler"
+          },
+          {
+            "name": "program",
+            "type": "dropdown",
+            "values": [
+              {
+                "id": "manual",
+                "title": {
+                  "de": "Handbetrieb",
+                  "en": "Manual"
+                }
+              },
+              {
+                "id": "scheduled",
+                "title": {
+                  "de": "Zeitprogramm",
+                  "en": "Schedule"
+                }
+              }
+            ]
+          }
+        ],
+        "titleFormatted": {
+          "de": "Heizkreis auf [[program]] stellen",
+          "en": "Set heating zone to [[program]]"
+        }
       }
     ]
   },
@@ -525,7 +734,7 @@
         "de": "Heizungssteuerung",
         "en": "Heating controls"
       },
-      "height": 178,
+      "height": 274,
       "settings": [
         {
           "id": "boiler",
@@ -544,6 +753,10 @@
         "setMode": {
           "method": "POST",
           "path": "/mode"
+        },
+        "setProgram": {
+          "method": "POST",
+          "path": "/program"
         }
       },
       "id": "boiler-control"

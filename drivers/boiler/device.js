@@ -1,7 +1,9 @@
 'use strict';
 
 const Homey = require('homey');
+const { Controls } = require('../../lib/controls');
 const Measurements = require('../../lib/insights');
+const { describeFaults } = require('../../lib/faults');
 const { Remocon } = require('../../lib/remocon');
 
 const POLL_INTERVAL = 15 * 60_000;
@@ -13,8 +15,7 @@ const { capabilities: CAPABILITIES, capabilitiesOptions: OPTIONS } = manifest.dr
 module.exports = class BoilerDevice extends Homey.Device {
   async onInit() {
     for (const id of CAPABILITIES) {
-      if (this.hasCapability(id)) continue;
-      await this.addCapability(id);
+      if (!this.hasCapability(id)) await this.addCapability(id);
       if (OPTIONS[id]) await this.setCapabilityOptions(id, OPTIONS[id]);
     }
     if (!this.getCapabilityOptions('burner_active')?.preventInsights) {
@@ -24,6 +25,7 @@ module.exports = class BoilerDevice extends Homey.Device {
       });
     }
     this.registerCapabilityListener('boiler_mode', mode => this.changeMode(mode));
+    this.registerCapabilityListener('heating_program', program => this.changeProgram(program));
     this.measurements = new Measurements(this.homey.insights, this.getData().id, this.getName());
     const { email, password } = this.getStoreValue('credentials');
     this.useClient(new Remocon(email, password));
@@ -32,6 +34,7 @@ module.exports = class BoilerDevice extends Homey.Device {
   useClient(client) {
     this.homey.clearTimeout(this.timer);
     this.client = client;
+    this.controls = new Controls(client);
     this.gasCheckedAt = null;
     if (!this.polling) void this.poll();
   }
@@ -40,7 +43,7 @@ module.exports = class BoilerDevice extends Homey.Device {
     const client = this.client;
     if (!client) throw new Error('RemoconNet ist noch nicht bereit.');
     if (!MODE_VALUES.some(item => item.id === mode)) throw new Error('Ungültige Betriebsart.');
-    if (this.modeChange) throw new Error('Eine Änderung der Betriebsart läuft bereits.');
+    if (this.modeChange || this.programChange) throw new Error('Eine Änderung der Betriebsart läuft bereits.');
     this.modeRevision = (this.modeRevision ?? 0) + 1;
     this.modeChange = true;
     this.requestedMode = mode;
@@ -80,36 +83,94 @@ module.exports = class BoilerDevice extends Homey.Device {
     }
   }
 
+  async onSettings({ changedKeys, newSettings }) {
+    if (!changedKeys.includes('heating_zone')) return;
+    if (this.programChange) throw new Error('Bitte den laufenden Wechsel abwarten.');
+    if (!Number.isInteger(newSettings.heating_zone) || newSettings.heating_zone < 1 || newSettings.heating_zone > 6) {
+      throw new Error('Bitte einen Heizkreis von 1 bis 6 wählen.');
+    }
+    this.programRevision = (this.programRevision ?? 0) + 1;
+    this.confirmedProgram = null;
+    await this.setCapabilityValue('heating_program', null);
+    await this.setCapabilityValue('heating_program_state', null);
+  }
+
+  async changeProgram(program) {
+    if (!['manual', 'scheduled'].includes(program)) throw new Error('Ungültige Steuerung.');
+    if (!this.client) throw new Error('RemoconNet ist noch nicht bereit.');
+    if (this.programChange || this.modeChange) throw new Error('Ein Wechsel läuft bereits.');
+    this.programChange = true;
+    this.programRevision = (this.programRevision ?? 0) + 1;
+    this.requestedProgram = program;
+    void this.applyProgram(this.client, this.controls, program);
+  }
+
+  async applyProgram(client, controls, program) {
+    try {
+      await this.setCapabilityValue('heating_program_state', 'pending');
+      await controls.setProgram(this.getData().id, Number(this.getSetting('heating_zone') ?? 1), program);
+      if (this.client === client) {
+        this.programError = '';
+        await this.showProgram(program);
+      }
+    } catch (error) {
+      this.programError = `Letzter Steuerungsauftrag: ${error.message}`;
+      this.log('Steuerung konnte nicht bestätigt werden:', error.message);
+      if (this.client === client) {
+        await this.setCapabilityValue('heating_program_state', 'unconfirmed').catch(() => {});
+        if (Date.now() >= client.retryAt) {
+          try {
+            const actual = await controls.getProgram(this.getData().id, Number(this.getSetting('heating_zone') ?? 1));
+            if (this.client === client) await this.showProgram(actual);
+          } catch {
+            // Leave the unconfirmed state visible until a later successful read.
+          }
+        }
+      }
+    } finally {
+      this.requestedProgram = null;
+      this.programChange = false;
+    }
+  }
+
+  async showProgram(program) {
+    await this.setCapabilityValue('heating_program_state', program);
+    this.confirmedProgram = program;
+    await this.setCapabilityValue('heating_program', ['manual', 'scheduled'].includes(program) ? program : null);
+  }
+
+  async updateLockout(result) {
+    // Remember emitted lockouts across restarts.
+    const key = result.blocked ? result.codes : '';
+    await this.setCapabilityValue('alarm_boiler_locked', result.blocked);
+    await this.setCapabilityValue('boiler_fault_code', key || '—');
+    const description = describeFaults(key, this.homey.i18n?.getLanguage() ?? 'de');
+    await this.setCapabilityValue('boiler_fault_description', description || '—');
+    if (result.blocked && this.getStoreValue('notified_lockout') !== key) {
+      await this.homey.flow.getDeviceTriggerCard('boiler_locked').trigger(this, { code: key, description });
+      await this.setStoreValue('notified_lockout', key);
+    }
+    if (!result.blocked && this.getStoreValue('notified_lockout')) {
+      await this.setStoreValue('notified_lockout', '');
+    }
+  }
+
   async poll() {
     const client = this.client;
     const includeGas = this.gasCheckedAt === null || Date.now() - this.gasCheckedAt >= GAS_INTERVAL;
     this.polling = true;
     try {
-      if (!this.modeChange && Date.now() >= client.retryAt) {
-        const revision = this.modeRevision;
-        try {
-          const mode = await client.getMode(this.getData().id);
-          if (this.client === client && !this.modeChange && this.modeRevision === revision &&
-              (this.getCapabilityValue('boiler_mode_state') !== (mode ?? 'other') ||
-                this.getCapabilityValue('boiler_mode') !== mode)) {
-            await this.showMode(mode);
-          }
-        } catch (error) {
-          this.log('Betriebsart konnte nicht gelesen werden:', error.message);
-        }
-      }
       const { values, errors, diagnostic } = await client.snapshot(this.getData().id, includeGas);
       if (this.client !== client) return;
       const capabilities = this.getCapabilities();
-      const checked = capabilities.filter(id => !['boiler_mode', 'boiler_mode_state'].includes(id) && (includeGas || !id.startsWith('gas_')));
+      const checked = capabilities.filter(id => !['boiler_mode', 'boiler_mode_state', 'heating_program', 'heating_program_state', 'alarm_boiler_locked', 'boiler_fault_code', 'boiler_fault_description'].includes(id) && (includeGas || !id.startsWith('gas_')));
       let recorded = 0;
       let failed = 0;
       const insightsErrors = new Set();
       for (const id of checked) {
         if (this.client !== client) return;
         const value = values[id] ?? null;
-        const keepLast = ['measure_temperature', 'burner_hours_heating', 'burner_hours_water'].includes(id);
-        if (value !== null || (!keepLast && this.getCapabilityValue(id) != null)) {
+        if (value !== null) {
           await this.setCapabilityValue(id, value);
         }
         if (value === null || id === 'burner_active') continue;
@@ -130,15 +191,53 @@ module.exports = class BoilerDevice extends Homey.Device {
           insightsErrors.add(`${metadata.title}: ${error.message}`);
         }
       }
-      if (includeGas) {
-        this.gasCheckedAt = Date.now();
+      let controlDiagnostic = '';
+      const revision = this.programRevision;
+      if (!this.programChange && Date.now() >= client.retryAt) {
+        try {
+          const program = await this.controls.getProgram(this.getData().id, Number(this.getSetting('heating_zone') ?? 1));
+          if (this.client === client && !this.programChange && this.programRevision === revision) {
+            await this.showProgram(program);
+          }
+        } catch (error) {
+          controlDiagnostic = `Heizkreis-Steuerung: ${error.message}`;
+        }
+      }
+      if (!this.modeChange && Date.now() >= client.retryAt) {
+        const revision = this.modeRevision;
+        try {
+          const mode = await client.getMode(this.getData().id);
+          if (this.client === client && !this.modeChange && this.modeRevision === revision &&
+              (this.getCapabilityValue('boiler_mode_state') !== (mode ?? 'other') ||
+                this.getCapabilityValue('boiler_mode') !== mode)) {
+            await this.showMode(mode);
+          }
+        } catch (error) {
+          this.log('Betriebsart konnte nicht gelesen werden:', error.message);
+        }
+      }
+      if (Date.now() >= client.retryAt) {
+        try {
+          const lockout = await this.controls.getLockout(this.getData().id);
+          if (this.client === client) await this.updateLockout(lockout);
+        } catch (error) {
+          controlDiagnostic += ` Sperrstatus: ${error.message}`;
+        }
+      }
+      {
+        if (includeGas) this.gasCheckedAt = Date.now();
         const report = diagnostic.metering;
         const info = [
           `Version ${manifest.version}`,
+          `Abruf ${new Date().toISOString()}`,
+          controlDiagnostic,
+          this.programError,
+          errors.length ? `Datenabruf: ${[...new Set(errors)].join(', ')}` : null,
           `Insights: ${recorded} gespeichert, ${failed} Fehler`,
           ...insightsErrors,
           `Außen: ${diagnostic.outside}`,
           `Vorlauf/Brennerstunden: ${diagnostic.menu ?? 'Abfrage nicht erreicht'}`,
+          diagnostic.temperatures ? `Temperaturfelder: ${diagnostic.temperatures}` : null,
           `Gas: ${report.step ?? 'Abfrage nicht erreicht'}`,
           report.error, report.volume,
           Number.isInteger(report.recognized) ? `${report.recognized}/6 Werte` : null,

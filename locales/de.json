@@ -10,6 +10,9 @@
     "unconfirmed": "Wechsel unbestätigt",
     "unknown": "Betriebsart wird gelesen …",
     "unavailable": "Heizung nicht erreichbar oder nicht gewählt",
-    "failed": "Schaltauftrag konnte nicht angenommen werden"
+    "failed": "Schaltauftrag konnte nicht angenommen werden",
+    "manual": "Handbetrieb",
+    "scheduled": "Zeitprogramm",
+    "locked": "Heizung gesperrt"
   }
 }

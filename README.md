@@ -29,7 +29,10 @@ Andere ELCO-Gasthermen mit derselben RemoconNet-Schnittstelle können ebenfalls 
 ## Messwerte prüfen
 
 - **Brenner aktiv** verwendet das Flammensignal und fragt bei Bedarf zusätzlich `IsFlameOn` ab. Vergleiche es mit der iOS-App bei laufendem Brenner. Homey fragt den Status im Abstand von 15 Minuten ab. Die Flow-Auslöser reagieren auf von Homey beobachtete Zustände, kurze Zyklen können zwischen zwei Abfragen liegen.
-- **Vorlauftemperatur** zeigt die gemessene Kessel-Vorlauftemperatur in °C.
+- **Vorlauf-Solltemperatur** (122) zeigt den vorgegebenen Vorlaufwert in °C.
+- **Vorlauf-Isttemperatur** (123) zeigt die gemessene Kessel-Vorlauftemperatur in °C; die bisherige Messreihe bleibt erhalten.
+- **Rücklauftemperatur** (124) zeigt die gemessene Rücklauftemperatur in °C.
+- Alle drei Temperaturen werden bei jedem erfolgreichen Abruf in Insights gespeichert.
 - **Brennerstunden** erscheinen getrennt für Heizung und Warmwasser. Für die dokumentierten Diagnosefelder rechnet die App den gelieferten Wert mit Faktor zehn in Stunden um. Vergleiche die Rohwerte im INFO-Menü der THISION MINI, Parameter 810 und 811. ELCO gibt dort den Faktor zehn an. Die Werte sind kumulierte Zähler.
 - **Gas Heizung / Warmwasser** zeigt die als kWh interpretierte RemoconNet-Monatswerte. Vergleiche sie mit der RemoconNet-Verbrauchsansicht für denselben Zeitraum und dieselbe Einheit. Die App fragt sie beim Start und ungefähr stündlich ab.
 - Fehlende Werte bleiben leer. Wenn das Gerät keine unterstützten Werte liefert, zeigt Homey eine Meldung. Teile zur Fehlersuche den Meldungstext und die Namen der sichtbaren bzw. fehlenden Sensoren.
@@ -45,7 +48,7 @@ Installiere die neue Version mit `homey app install` über die bestehende App. B
 - **Gas heute / diesen Monat / letzter Monat (m³)** nutzt die Volumenwerte aus dem RemoconNet-Webbericht. Heizung und Warmwasser erscheinen getrennt in m³, sofern der Bericht die passenden Reihen liefert. Die Abfrage erfolgt beim Start und ungefähr stündlich. Der Tagesbericht wird von RemoconNet in Zwei-Stunden-Abschnitten geführt.
 - **Brennerleistung** zeigt den gemeldeten Momentanwert in kW zum Zeitpunkt der Abfrage.
 - **Außentemperatur Heizung** verwendet den Anlagenstatus oder den RemoconNet-Datenpunkt OutsideTemp. Falls der Anlagenstatus fehlt, lässt sich die Herkunft vom physischen Fühler anhand der Cloud-Antwort allein nicht bestätigen. Vorlauf und Außentemperatur werden im selben 15-Minuten-Abfragezyklus aktualisiert.
-- In der Homey-Web-App unter **Insights** wählst du beim Heizungsgerät **Vorlauftemperatur** und **Außentemperatur Heizung** im selben Zeitraum. Die App schreibt gültige Temperatur-, Leistungs-, Verbrauchs- und Betriebsstundenwerte bei jedem Abruf direkt nach Insights. Der Brennerstatus bleibt in der Geräteansicht und für Flows verfügbar. Suche die Reihen über den Gerätenamen, beispielsweise **Heizung – Vorlauftemperatur**. Die neuen Reihen beginnen mit der Installation. Homey verwaltet Speicherung und zeitliche Verdichtung.
+- In der Homey-Web-App unter **Insights** wählst du beim Heizungsgerät **Vorlauf-Isttemperatur** und **Außentemperatur Heizung** im selben Zeitraum. Die App schreibt gültige Temperatur-, Leistungs-, Verbrauchs- und Betriebsstundenwerte bei jedem Abruf direkt nach Insights. Der Brennerstatus bleibt in der Geräteansicht und für Flows verfügbar. Suche die Reihen über den Gerätenamen, beispielsweise **Heizung – Vorlauf-Isttemperatur**. Die neuen Reihen beginnen mit der Installation. Homey verwaltet Speicherung und zeitliche Verdichtung.
 
 ## Diagnose bei fehlenden Werten
 
@@ -69,3 +72,32 @@ Die grüne Taste zeigt die bestätigte Betriebsart. Während eines Wechsels wird
 Die Auswahl der Betriebsart wird mit dem von RemoconNet bestätigten Zustand synchronisiert, beim Start, nach dem Umschalten und bei den regulären Abfragen.
 
 Bei Hinweisen auf eine abgelaufene Sitzung meldet sich die App automatisch erneut an. Dies gilt für die mobile API und das Webportal, einschließlich HTTP 405. Die Datenabfrage wird anschließend einmal wiederholt. Parallele Abrufe teilen sich die Neuanmeldung der mobilen API. Die Wiederherstellung nach mehrtägigem Betrieb muss noch im Praxiseinsatz bestätigt werden.
+
+## Sperrmeldungen und Heizkreis-Steuerung ab 0.3.0
+
+Die App fragt alle 15 Minuten nach blockierenden Fehlern. Bei einer neu erkannten Sperre oder einem geänderten Fehlercode startet sie den Flow-Auslöser **Heizung meldet eine neue Sperre**. Geräteansicht und Dashboard zeigen die Sperre mit Fehlercode. Eine fehlgeschlagene Abfrage lässt den letzten bekannten Sperrstatus stehen. Benachrichtigungen können über diesen Flow-Auslöser eingerichtet werden.
+
+**Handbetrieb** und **Zeitprogramm** steuern den gewählten Heizkreis. Unter den erweiterten Geräteeinstellungen ist zunächst Heizkreis 1 eingetragen. Bei mehreren Heizkreisen wähle die gewünschte Nummer. Die beiden Tasten erscheinen auch im Dashboard-Widget. Die Flow-Aktion **Heizkreis-Steuerung einstellen** bietet dieselbe Umschaltung. Der Handbetrieb entspricht RemoconNet ZoneMode 2, das Zeitprogramm ZoneMode 3. Andere Zustände wie Absenkbetrieb werden als **Andere Steuerung** angezeigt.
+
+Die Fehlerkennzeichnungen und die Umschaltung sind anhand der veröffentlichten RemoconNet-Referenz implementiert und mit simulierten Antworten geprüft. Die Bestätigung am realen Gateway, insbesondere während einer Sperre, steht noch aus.
+
+## Verzögerte Cloud-Antworten ab 0.3.3
+
+Messwerte werden vor den zusätzlichen Steuerungs- und Fehlerabfragen aktualisiert. Für Anlagenstatus und Datenpunkte wartet die App bis zu 45 Sekunden. Bei einer fehlgeschlagenen Messwertabfrage zeigt Homey den letzten empfangenen Wert weiter an. Nur tatsächlich empfangene Werte werden in Insights aufgezeichnet. Die Diagnose enthält den Zeitpunkt des Abrufs sowie Fehler des letzten Steuerungsauftrags.
+
+## Fehlerbeschreibungen ab 0.3.6
+
+Geräteansicht und Dashboard zeigen zu bekannten Fehlercodes eine kurze Beschreibung.
+Der Flow-Auslöser **Heizung meldet eine neue Sperre** liefert zusätzlich zum unveränderten
+Token **Fehlercode** den Token **Fehlerbeschreibung**, zum Beispiel
+„108 – Wasserdruck zu niedrig / Anlage füllen“. Bei mehreren Fehlern enthält er alle
+Codes mit ihrer Beschreibung. Unbekannte Codes bleiben mit dem Hinweis „Unbekannter Fehlercode“ sichtbar.
+Es werden keine automatischen Push-Nachrichten versendet.
+
+Die Zuordnung gilt für die THISION-MINI-Baureihe und basiert auf den
+[ELCO-Betriebsanleitungen, Seite 20](https://www.manualslib.de/manual/258783/Elco-Thision-Mini.html?page=20)
+und [Seite 15](https://www.manualslib.de/manual/384409/Elco-Thision-Mini.html?page=15).
+Unterstützt sind 101, 103–108, 110, 112, 203, 305–307, 501 und 1P4.
+Je nach Geräteausführung können die verfügbaren Codes abweichen. Die Beschreibung
+ändert die bestehende Abfrage blockierender Fehler nicht; Warnungen wie 1P4 werden
+nur übersetzt, falls sie von dieser Abfrage geliefert werden.
